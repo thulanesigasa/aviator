@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { TrendingUp, AlertTriangle, ShieldCheck } from "lucide-react";
 
 interface SignalData {
@@ -11,10 +11,43 @@ interface SignalData {
 }
 
 interface SignalAlertsProps {
-  signal: SignalData;
+  signal?: SignalData | null;
 }
 
-export function SignalAlerts({ signal }: SignalAlertsProps) {
+export function SignalAlerts({ signal: initialSignal }: SignalAlertsProps) {
+  const [signal, setSignal] = useState<SignalData>({
+    prediction: "WAIT: Downward Trend",
+    probability: 0.45,
+    threshold: 1.50,
+    timestamp: null,
+  });
+
+  // Sync with prop updates from WebSocket if active
+  useEffect(() => {
+    if (initialSignal) {
+      setSignal(initialSignal);
+    }
+  }, [initialSignal]);
+
+  // Set up 3s polling fallback loop to GET /api/signals/latest
+  useEffect(() => {
+    const pollSignals = async () => {
+      try {
+        const res = await fetch("http://localhost:8000/api/signals/latest");
+        if (res.ok) {
+          const data = (await res.json()) as SignalData;
+          setSignal(data);
+        }
+      } catch (err) {
+        console.warn("[Signal Alerts] Polling signals gateway failed:", err);
+      }
+    };
+
+    pollSignals();
+    const timer = setInterval(pollSignals, 3000);
+    return () => clearInterval(timer);
+  }, []);
+
   const isHigh = signal.prediction.toLowerCase().includes("high");
   const isWait = signal.prediction.toLowerCase().includes("wait");
   

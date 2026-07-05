@@ -28,7 +28,7 @@ export function PatternTable({ data }: PatternTableProps) {
     if (mult < 1.20) {
       return "bg-danger-rose/10 border-danger-rose/20 text-danger-rose";
     }
-    if (mult >= 5.00) {
+    if (mult >= 2.00) {
       return "bg-success-emerald/10 border-success-emerald/20 text-success-emerald shadow-[0_0_12px_rgba(16,185,129,0.15)]";
     }
     return "bg-white/5 border-white/10 text-gray-300";
@@ -69,7 +69,7 @@ export function PatternTable({ data }: PatternTableProps) {
                     </td>
                     <td className="py-3 px-2">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${getBadgeStyle(item.multiplier)}`}>
-                        {item.multiplier < 1.20 ? "COLD" : item.multiplier >= 5.00 ? "HOT" : "STABLE"}
+                        {item.multiplier < 1.20 ? "COLD" : item.multiplier >= 2.00 ? "HOT" : "STABLE"}
                       </span>
                     </td>
                   </tr>

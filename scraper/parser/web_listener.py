@@ -20,6 +20,8 @@ class AviatorWebListener:
         # Selectors commonly associated with the Aviator history bar
         self.history_selectors = [
             ".stats-list div:first-child",
+            ".payout:first-child",
+            ".bubble-multiplier:first-child",
             ".stats-list .bubble-multiplier:first-child",
             ".multipliers-history .multiplier-item:first-child",
             ".history-ribbon div:first-child"

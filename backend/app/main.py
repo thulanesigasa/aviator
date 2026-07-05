@@ -86,7 +86,7 @@ async def get_history(limit: int = 50):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/signals")
+@app.get("/api/signals/latest")
 def get_signals():
     """
     Serves the latest neural network prediction.
