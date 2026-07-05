@@ -19,20 +19,14 @@ export interface ScraperStatusData {
   total_daily_records: number;
 }
 
+export interface TelemetryState extends CrashRecord {
+  signal?: SignalData;
+  status?: ScraperStatusData;
+}
+
 export function useWebSocket(url: string) {
   const [isConnected, setIsConnected] = useState<boolean>(false);
-  const [latestTelemetry, setLatestTelemetry] = useState<CrashRecord | null>(null);
-  const [latestSignal, setLatestSignal] = useState<SignalData>({
-    prediction: "WAIT: Downward Trend",
-    probability: 0.45,
-    threshold: 1.50,
-    timestamp: null,
-  });
-  const [scraperStatus, setScraperStatus] = useState<ScraperStatusData>({
-    healthy: false,
-    last_scrape_timestamp: null,
-    total_daily_records: 0,
-  });
+  const [latestTelemetry, setLatestTelemetry] = useState<TelemetryState | null>(null);
   const [history, setHistory] = useState<CrashRecord[]>([]);
   
   const wsRef = useRef<WebSocket | null>(null);
@@ -46,7 +40,11 @@ export function useWebSocket(url: string) {
         const data = await res.json();
         setHistory(data);
         if (data.length > 0) {
-          setLatestTelemetry(data[data.length - 1]);
+          const lastRecord = data[data.length - 1] as CrashRecord;
+          setLatestTelemetry((prev) => ({
+            ...prev,
+            ...lastRecord
+          }));
         }
       }
     } catch (err) {
@@ -72,17 +70,24 @@ export function useWebSocket(url: string) {
         const msg = JSON.parse(event.data);
         
         if (msg.type === "init") {
-          setLatestSignal(msg.signal);
-          setScraperStatus(msg.status);
+          setLatestTelemetry((prev) => ({
+            multiplier: prev?.multiplier ?? 1.0,
+            timestamp: prev?.timestamp ?? new Date().toISOString(),
+            ...prev,
+            signal: msg.signal as SignalData,
+            status: msg.status as ScraperStatusData
+          }));
         } 
         
         else if (msg.type === "multiplier") {
           const record = msg.payload as CrashRecord;
-          setLatestTelemetry(record);
-          
-          if (msg.status) {
-            setScraperStatus(msg.status);
-          }
+          setLatestTelemetry((prev) => ({
+            ...prev,
+            id: record.id,
+            multiplier: record.multiplier,
+            timestamp: record.timestamp,
+            status: (msg.status as ScraperStatusData) || prev?.status
+          }));
           
           // Append to history and enforce 50-limit bounding
           setHistory((prev) => {
@@ -95,7 +100,12 @@ export function useWebSocket(url: string) {
         } 
         
         else if (msg.type === "signal") {
-          setLatestSignal(msg.payload as SignalData);
+          setLatestTelemetry((prev) => ({
+            multiplier: prev?.multiplier ?? 1.0,
+            timestamp: prev?.timestamp ?? new Date().toISOString(),
+            ...prev,
+            signal: msg.payload as SignalData
+          }));
         }
       } catch (err) {
         console.error("[WS Hook] Error parsing socket frame:", err);
@@ -125,8 +135,6 @@ export function useWebSocket(url: string) {
   return {
     isConnected,
     latestTelemetry,
-    latestSignal,
-    scraperStatus,
     history,
   };
 }
