@@ -1,4 +1,10 @@
+import os
 import json
+from dotenv import load_dotenv
+# Load environment variables from workspace root .env file
+env_path = os.path.join(os.path.dirname(__file__), "../../.env")
+load_dotenv(env_path)
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
