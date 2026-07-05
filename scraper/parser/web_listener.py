@@ -64,25 +64,70 @@ class AviatorWebListener:
 
     async def get_latest_multiplier(self) -> Optional[float]:
         """
-        Reads the DOM of the Aviator page to extract the most recent multiplier.
+        Reads the DOM of the Aviator page or its child frames to extract the most recent multiplier.
+        Dynamically attaches to the correct tab if the URL or title changes.
         """
+        if not self.context:
+            return None
+
+        # Dynamically locate/re-attach to the page running the Aviator game
+        try:
+            pages = self.context.pages
+            target_page = None
+            for p in pages:
+                try:
+                    url = p.url.lower()
+                    title = (await p.title()).lower()
+                    if "aviator" in url or "aviator" in title or "crash" in url:
+                        target_page = p
+                        break
+                except Exception:
+                    continue
+            
+            if target_page:
+                self.page = target_page
+            elif not self.page and pages:
+                self.page = pages[0]
+        except Exception as e:
+            print(f"[Scraper] Error scanning active pages: {e}")
+
         if not self.page:
             return None
 
         for selector in self.history_selectors:
+            # 1. Try checking the main page DOM
             try:
                 element = self.page.locator(selector).first
                 if await element.is_visible():
                     text = await element.text_content()
                     if text:
-                        # Extract numeric float values, e.g. "1.87x" -> 1.87
                         clean_text = text.replace("x", "").replace("X", "").replace("×", "").strip()
                         try:
                             return float(clean_text)
                         except ValueError:
                             pass
             except Exception:
-                continue
+                pass
+
+            # 2. Try checking all child frames/iframes embedded in the page
+            try:
+                frames = self.page.frames
+                for frame in frames:
+                    try:
+                        element = frame.locator(selector).first
+                        if await element.is_visible():
+                            text = await element.text_content()
+                            if text:
+                                clean_text = text.replace("x", "").replace("X", "").replace("×", "").strip()
+                                try:
+                                    return float(clean_text)
+                                except ValueError:
+                                    pass
+                    except Exception:
+                        continue
+            except Exception:
+                pass
+
         return None
 
     async def start_listening(self):
