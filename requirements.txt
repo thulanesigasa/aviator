@@ -1,0 +1,22 @@
+# Unified requirements for all services in Aviator monorepo
+
+# Scraper
+playwright>=1.42.0
+
+# Backend & WebSockets
+fastapi>=0.110.0
+uvicorn[standard]>=0.28.0
+websockets>=12.0
+pydantic-settings>=2.2.0
+
+# Database Client
+supabase>=2.3.0
+
+# Machine Learning & AI
+pandas>=2.2.0
+numpy>=1.26.0
+scikit-learn>=1.4.0
+tensorflow>=2.15.0
+
+# Utilities
+python-dotenv>=1.0.1

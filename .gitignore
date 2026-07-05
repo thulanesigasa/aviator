@@ -1,0 +1,21 @@
+# Dependency ignores
+node_modules/
+.next/
+out/
+build/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+
+# Local Configs
+.env
+.env*.local
+*.db
+*.log
+checkpoint/
+*.pth
+*.h5
