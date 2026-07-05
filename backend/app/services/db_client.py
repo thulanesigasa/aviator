@@ -1,35 +1,20 @@
-import asyncio
+import os
 from supabase import create_client, Client
-from app.config import settings
 
-# Initialize Supabase client
-supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://your-project-ref.supabase.co")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "your-anon-key")
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 async def insert_crash_record(multiplier: float, timestamp: str):
-    """
-    Inserts a newly scraped multiplier round into the public.crash_history table.
-    Executes in a threadpool to prevent blocking FastAPI's async loops.
-    """
-    payload = {
+    """Inserts a new crash multiplier into the Supabase database."""
+    data, count = supabase.table("crash_history").insert({
         "multiplier": multiplier,
         "timestamp": timestamp
-    }
-    loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(
-        None,
-        lambda: supabase.table("crash_history").insert(payload).execute()
-    )
+    }).execute()
+    return data
 
 async def fetch_recent_crashes(limit: int = 50):
-    """
-    Queries the latest crash multipliers sorted by timestamp in descending order.
-    """
-    loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(
-        None,
-        lambda: supabase.table("crash_history")
-            .select("*")
-            .order("timestamp", desc=True)
-            .limit(limit)
-            .execute()
-    )
+    """Fetches the most recent crashes for the LSTM model and UI."""
+    response = supabase.table("crash_history").select("*").order("timestamp", desc=True).limit(limit).execute()
+    return response
