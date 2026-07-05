@@ -16,12 +16,11 @@ export function PatternTable({ data }: PatternTableProps) {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
 
-  // Clone and reverse history array so that the newest is displayed first in the table
-  const reversedData = [...data].reverse();
-  const totalPages = Math.max(Math.ceil(reversedData.length / itemsPerPage), 1);
+  // Chronological order: oldest flight is index 1 at the top of page 1, newest is at the bottom of the last page
+  const totalPages = Math.max(Math.ceil(data.length / itemsPerPage), 1);
   
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedData = reversedData.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedData = data.slice(startIndex, startIndex + itemsPerPage);
 
   const getBadgeStyle = (mult: number) => {
     if (mult < 1.20) {
@@ -75,7 +74,7 @@ export function PatternTable({ data }: PatternTableProps) {
           <tbody>
             {paginatedData.length > 0 ? (
               paginatedData.map((item, index) => {
-                const globalIndex = reversedData.length - (startIndex + index);
+                const globalIndex = startIndex + index + 1;
                 return (
                   <tr key={index} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors">
                     <td className="py-3 px-2 font-mono text-neutral-500">#{globalIndex}</td>
@@ -108,7 +107,7 @@ export function PatternTable({ data }: PatternTableProps) {
       {totalPages > 1 && (
         <div className="flex items-center justify-between border-t border-white/5 pt-4 mt-auto">
           <span className="text-xs text-neutral-500 font-mono">
-            Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, reversedData.length)} of {reversedData.length} records
+            Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, data.length)} of {data.length} records
           </span>
           <div className="flex items-center gap-2">
             <button

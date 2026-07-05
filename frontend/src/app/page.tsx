@@ -97,54 +97,11 @@ export default function AviatorDashboard() {
     </div>
   );
 
-  const renderAuthContent = (type: "login" | "signup") => (
-    <form onSubmit={(e) => { e.preventDefault(); setModal(null); }} className="flex flex-col gap-4 text-xs font-mono">
-      <div className="flex flex-col gap-1">
-        <label className="text-[10px] text-neutral-500 uppercase font-bold">Email Address</label>
-        <input 
-          type="email" 
-          required 
-          placeholder="admin@aviator-lstm.tech"
-          className="bg-[#050505] border border-neutral-800 rounded p-2 text-white focus:outline-none focus:border-orange-500"
-        />
-      </div>
-      <div className="flex flex-col gap-1">
-        <label className="text-[10px] text-neutral-500 uppercase font-bold">Access Token / Password</label>
-        <input 
-          type="password" 
-          required 
-          placeholder="••••••••"
-          className="bg-[#050505] border border-neutral-800 rounded p-2 text-white focus:outline-none focus:border-orange-500"
-        />
-      </div>
-      {type === "signup" && (
-        <div className="flex flex-col gap-1">
-          <label className="text-[10px] text-neutral-500 uppercase font-bold">Supabase Project Ref</label>
-          <input 
-            type="text" 
-            required 
-            placeholder="e.g. abcdefghijklmnopqrst"
-            className="bg-[#050505] border border-neutral-800 rounded p-2 text-white focus:outline-none focus:border-orange-500"
-          />
-        </div>
-      )}
-      <button 
-        type="submit" 
-        className="w-full py-2 bg-orange-500 hover:bg-orange-600 text-black font-black uppercase tracking-wider rounded transition-colors cursor-pointer mt-2"
-      >
-        {type === "login" ? "ESTABLISH SESSION" : "REGISTER NODE"}
-      </button>
-      <span className="text-[10px] text-neutral-500 text-center uppercase tracking-wide">
-        Credentials are authenticated locally for private nodes.
-      </span>
-    </form>
-  );
-
   return (
     <div className="min-h-screen bg-black text-white p-6 font-sans selection:bg-orange-500/30 flex flex-col justify-between gap-12">
       <div className="max-w-7xl mx-auto w-full flex flex-col gap-6">
         
-        {/* Header System with Navigation & Auth buttons */}
+        {/* Header System with Navigation (no Auth) */}
         <header className="flex flex-col md:flex-row items-start md:items-center justify-between py-2 border-b border-white/5 pb-6 gap-4">
           <div className="flex items-center gap-3">
             <div>
@@ -158,18 +115,13 @@ export default function AviatorDashboard() {
             </div>
           </div>
           
-          {/* Header navigation menus & Auth pills */}
+          {/* Header navigation menus */}
           <div className="flex flex-wrap items-center gap-4 md:gap-5 text-xs text-neutral-400 font-medium">
             <button onClick={() => openModal("Features & Capabilities", renderFeaturesContent())} className="hover:text-white cursor-pointer transition-colors">Features</button>
             <button onClick={() => openModal("Integration Tech Stack", renderTechStackContent())} className="hover:text-white cursor-pointer transition-colors font-mono uppercase text-[11px]">Stack</button>
             <button onClick={() => openModal("Frequently Asked Questions", renderFAQContent())} className="hover:text-white cursor-pointer transition-colors">FAQ</button>
             <button onClick={() => openModal("Pipeline Architecture", renderArchitectureContent())} className="hover:text-white cursor-pointer transition-colors">Architecture</button>
             <button onClick={() => openModal("Pipeline Support Contacts", renderContactContent())} className="hover:text-white cursor-pointer transition-colors">Contact</button>
-            
-            <span className="text-neutral-700 hidden sm:inline">|</span>
-            
-            <button onClick={() => openModal("Gateway Authentication", renderAuthContent("login"))} className="hover:text-white cursor-pointer transition-colors">Log in</button>
-            <button onClick={() => openModal("Node Registration", renderAuthContent("signup"))} className="px-3.5 py-1.5 bg-orange-500 text-black font-black uppercase tracking-wider rounded hover:bg-orange-600 cursor-pointer transition-colors">Sign up</button>
           </div>
         </header>
 
