@@ -102,25 +102,45 @@ class AnalyticsEngine:
         except Exception as e:
             print(f"[Analytics] Failed to save weights: {e}")
 
-    def generate_trading_signal(self, probability: float, last_few: list) -> dict:
+    def generate_trading_signal(self, probability: float, multipliers: list) -> dict:
         """
         Maps probability scores and sequence patterns (e.g. streaks) to trading signals.
-        Calculates three strategy layers: Conservative, Balanced, and Aggressive.
+        Calculates exit targets dynamically using trend percentiles over the last 20 rounds.
         """
+        last_few = multipliers[-5:]
         low_streak = sum(1 for x in last_few[-3:] if x < 1.30)
+        
+        # Fetch the last 20 rounds for dynamic trend percentiles
+        recent_rounds = multipliers[-20:] if len(multipliers) >= 20 else multipliers
+        
+        # Calculate dynamic percentiles
+        raw_cons = float(np.percentile(recent_rounds, 30))
+        raw_bal = float(np.percentile(recent_rounds, 45))
+        raw_agg = float(np.percentile(recent_rounds, 65))
+        
+        # Bound targets to ensure realistic thresholds
+        cons_target = max(1.05, min(raw_cons, 1.25))
+        bal_target = max(1.15, min(raw_bal, 1.55))
+        agg_target = max(1.40, min(raw_agg, 2.50))
         
         if low_streak >= 2:
             prediction = "WAIT: Cold Streak Recovery"
             target_mult = 1.00
+            cons_target = 1.00
+            bal_target = 1.00
+            agg_target = 1.00
         elif probability >= 0.70:
-            prediction = "HIGH PROBABILITY: Enter at 1.35x"
-            target_mult = 1.35
+            prediction = f"HIGH PROBABILITY: Enter at {bal_target:.2f}x"
+            target_mult = bal_target
         elif probability >= 0.50:
-            prediction = "MEDIUM PROBABILITY: Enter at 1.20x"
-            target_mult = 1.20
+            prediction = f"MEDIUM PROBABILITY: Enter at {bal_target:.2f}x"
+            target_mult = bal_target
         else:
             prediction = "WAIT: Downward Trend"
             target_mult = 1.00
+            cons_target = 1.00
+            bal_target = 1.00
+            agg_target = 1.00
 
         # Build dynamic multiple-strategy options
         cons_conf = min(probability * 1.3, 0.99) if low_streak < 2 else 0.10
@@ -130,17 +150,17 @@ class AnalyticsEngine:
         strategies = {
             "conservative": {
                 "name": "Conservative",
-                "target": 1.15 if low_streak < 2 else 1.00,
+                "target": round(cons_target, 2),
                 "confidence": round(cons_conf * 100, 1)
             },
             "balanced": {
                 "name": "Balanced (LSTM)",
-                "target": target_mult,
+                "target": round(bal_target, 2),
                 "confidence": round(bal_conf * 100, 1)
             },
             "aggressive": {
                 "name": "Aggressive",
-                "target": 1.70 if low_streak < 2 else 1.00,
+                "target": round(agg_target, 2),
                 "confidence": round(agg_conf * 100, 1)
             }
         }
@@ -148,7 +168,7 @@ class AnalyticsEngine:
         return {
             "prediction": prediction,
             "probability": round(probability, 4),
-            "threshold": target_mult,
+            "threshold": round(target_mult, 2),
             "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "strategies": strategies
         }
@@ -185,7 +205,7 @@ class AnalyticsEngine:
                                 probability = float(prob_tensor.item())
 
                             # Map to signals and multiple strategies
-                            signal = self.generate_trading_signal(probability, multipliers[-5:])
+                            signal = self.generate_trading_signal(probability, multipliers)
                             print(f"[Analytics] Signal Update: {signal['prediction']} (P={signal['probability']:.4f})")
                             
                             # Dispatch predictions back to the backend

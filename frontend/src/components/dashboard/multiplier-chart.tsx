@@ -9,21 +9,33 @@ interface CrashData {
   timestamp: string;
 }
 
-interface MultiplierChartProps {
-  data: CrashData[];
+interface StrategyTargets {
+  conservative: number;
+  balanced: number;
+  aggressive: number;
 }
 
-export function MultiplierChart({ data }: MultiplierChartProps) {
+interface MultiplierChartProps {
+  data: CrashData[];
+  targets?: StrategyTargets;
+}
+
+export function MultiplierChart({ data, targets }: MultiplierChartProps) {
   const totalFlights = data.length;
   
+  // Resolve dynamic targets with fallbacks for WAIT states (where targets are 1.0x)
+  const consTarget = targets && targets.conservative > 1.0 ? targets.conservative : 1.15;
+  const balTarget = targets && targets.balanced > 1.0 ? targets.balanced : 1.35;
+  const aggTarget = targets && targets.aggressive > 1.0 ? targets.aggressive : 1.70;
+
   // Calculate historical win rates across all session flights
-  const consWins = data.filter(d => d.multiplier >= 1.15).length;
+  const consWins = data.filter(d => d.multiplier >= consTarget).length;
   const consRate = totalFlights > 0 ? (consWins / totalFlights) * 100 : 0;
   
-  const balWins = data.filter(d => d.multiplier >= 1.35).length;
+  const balWins = data.filter(d => d.multiplier >= balTarget).length;
   const balRate = totalFlights > 0 ? (balWins / totalFlights) * 100 : 0;
   
-  const aggWins = data.filter(d => d.multiplier >= 1.70).length;
+  const aggWins = data.filter(d => d.multiplier >= aggTarget).length;
   const aggRate = totalFlights > 0 ? (aggWins / totalFlights) * 100 : 0;
 
   // Take last 50 entries for visual line chart progression
@@ -109,7 +121,7 @@ export function MultiplierChart({ data }: MultiplierChartProps) {
           {/* Conservative Win Rate */}
           <div className="bg-[#050505] p-4 rounded-xl border border-white/5 flex flex-col gap-3 font-mono">
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] text-neutral-555 uppercase font-bold text-neutral-400">Conservative Strategy (1.15x)</span>
+              <span className="text-[10px] text-neutral-555 uppercase font-bold text-neutral-400">Conservative Strategy ({consTarget.toFixed(2)}x)</span>
               <span className="text-2xl font-black text-white">{consRate.toFixed(1)}%</span>
               <span className="text-[10px] text-neutral-500 mt-0.5">{consWins} of {totalFlights} wins</span>
             </div>
@@ -124,7 +136,7 @@ export function MultiplierChart({ data }: MultiplierChartProps) {
           {/* Balanced Win Rate */}
           <div className="bg-[#050505] p-4 rounded-xl border border-white/5 flex flex-col gap-3 font-mono">
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] text-neutral-555 uppercase font-bold text-neutral-400">Balanced LSTM Strategy (1.35x)</span>
+              <span className="text-[10px] text-neutral-555 uppercase font-bold text-neutral-400">Balanced LSTM Strategy ({balTarget.toFixed(2)}x)</span>
               <span className="text-2xl font-black text-white">{balRate.toFixed(1)}%</span>
               <span className="text-[10px] text-neutral-500 mt-0.5">{balWins} of {totalFlights} wins</span>
             </div>
@@ -139,7 +151,7 @@ export function MultiplierChart({ data }: MultiplierChartProps) {
           {/* Aggressive Win Rate */}
           <div className="bg-[#050505] p-4 rounded-xl border border-white/5 flex flex-col gap-3 font-mono">
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] text-neutral-555 uppercase font-bold text-neutral-400">Aggressive Strategy (1.70x)</span>
+              <span className="text-[10px] text-neutral-555 uppercase font-bold text-neutral-400">Aggressive Strategy ({aggTarget.toFixed(2)}x)</span>
               <span className="text-2xl font-black text-white">{aggRate.toFixed(1)}%</span>
               <span className="text-[10px] text-neutral-500 mt-0.5">{aggWins} of {totalFlights} wins</span>
             </div>

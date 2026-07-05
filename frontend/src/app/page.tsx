@@ -157,7 +157,14 @@ export default function AviatorDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-2">
             {/* Left Column: Multiplier Chart */}
             <div className="lg:col-span-2 flex flex-col gap-6">
-              <MultiplierChart data={history} />
+              <MultiplierChart 
+                data={history} 
+                targets={signal.strategies ? {
+                  conservative: signal.strategies.conservative.target,
+                  balanced: signal.strategies.balanced.target,
+                  aggressive: signal.strategies.aggressive.target
+                } : undefined}
+              />
             </div>
 
             {/* Right Column: AI Signals & Server Health */}
