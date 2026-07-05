@@ -102,26 +102,55 @@ class AnalyticsEngine:
         except Exception as e:
             print(f"[Analytics] Failed to save weights: {e}")
 
+    def calculate_strategy_confidence(self, target: float, multipliers: list, lstm_prob: float) -> float:
+        """
+        Computes composite confidence percentage for any target exit multiplier.
+        Combines physics baseline (0.97 / target), empirical success rate (last 50 flights),
+        and the LSTM neural probability trend multiplier.
+        """
+        if target <= 1.0:
+            return 0.0
+            
+        # 1. Game math baseline
+        theoretical_prob = 0.97 / target
+        
+        # 2. Empirical success rate in recent flights
+        recent = multipliers[-50:] if len(multipliers) >= 50 else multipliers
+        successful_rounds = sum(1 for x in recent if x >= target)
+        empirical_prob = successful_rounds / len(recent) if recent else theoretical_prob
+        
+        # Blend theoretical model with active session history
+        base_prob = 0.4 * theoretical_prob + 0.6 * empirical_prob
+        
+        # 3. LSTM trend boost (comparing predictions to standard 1.50x baseline probability: 0.647)
+        baseline_lstm = 0.647
+        trend_factor = lstm_prob / baseline_lstm
+        
+        # Calculate dynamic confidence and bound to [0.01, 0.99]
+        confidence = base_prob * trend_factor
+        return max(0.01, min(confidence, 0.99))
+
     def generate_trading_signal(self, probability: float, multipliers: list) -> dict:
         """
         Maps probability scores and sequence patterns (e.g. streaks) to trading signals.
-        Calculates exit targets dynamically using trend percentiles over the last 20 rounds.
+        Calculates exit targets dynamically using trend percentiles over the last 30 rounds,
+        and dynamically computes confidence scores using a physics-empirical-LSTM blend.
         """
         last_few = multipliers[-5:]
         low_streak = sum(1 for x in last_few[-3:] if x < 1.30)
         
-        # Fetch the last 20 rounds for dynamic trend percentiles
-        recent_rounds = multipliers[-20:] if len(multipliers) >= 20 else multipliers
+        # Fetch the last 30 rounds for dynamic trend percentiles
+        recent_rounds = multipliers[-30:] if len(multipliers) >= 30 else multipliers
         
-        # Calculate dynamic percentiles
-        raw_cons = float(np.percentile(recent_rounds, 30))
-        raw_bal = float(np.percentile(recent_rounds, 45))
-        raw_agg = float(np.percentile(recent_rounds, 65))
+        # Calculate dynamic percentile targets representing distinct risk bounds
+        raw_cons = float(np.percentile(recent_rounds, 25))
+        raw_bal = float(np.percentile(recent_rounds, 50))
+        raw_agg = float(np.percentile(recent_rounds, 75))
         
         # Bound targets to ensure realistic thresholds
-        cons_target = max(1.05, min(raw_cons, 1.25))
-        bal_target = max(1.15, min(raw_bal, 1.55))
-        agg_target = max(1.40, min(raw_agg, 2.50))
+        cons_target = max(1.10, min(raw_cons, 1.35))
+        bal_target = max(1.25, min(raw_bal, 2.20))
+        agg_target = max(1.50, min(raw_agg, 10.0))
         
         if low_streak >= 2:
             prediction = "WAIT: Cold Streak Recovery"
@@ -142,10 +171,10 @@ class AnalyticsEngine:
             bal_target = 1.00
             agg_target = 1.00
 
-        # Build dynamic multiple-strategy options
-        cons_conf = min(probability * 1.3, 0.99) if low_streak < 2 else 0.10
-        bal_conf = probability if low_streak < 2 else 0.05
-        agg_conf = max(probability * 0.7, 0.01) if low_streak < 2 else 0.01
+        # Calculate dynamic composite confidence scores
+        cons_conf = self.calculate_strategy_confidence(cons_target, multipliers, probability)
+        bal_conf = self.calculate_strategy_confidence(bal_target, multipliers, probability)
+        agg_conf = self.calculate_strategy_confidence(agg_target, multipliers, probability)
 
         strategies = {
             "conservative": {
