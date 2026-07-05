@@ -1,0 +1,16 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/venv/Scripts/python.exe",
+  "python.analysis.extraPaths": [
+    "./backend",
+    "./scraper",
+    "./analytics",
+    "./venv/Lib/site-packages"
+  ],
+  "python.autoComplete.extraPaths": [
+    "./backend",
+    "./scraper",
+    "./analytics",
+    "./venv/Lib/site-packages"
+  ],
+  "css.lint.unknownAtRules": "ignore"
+}

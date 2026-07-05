@@ -1,97 +1,135 @@
 import os
+import time
+import asyncio
+import datetime
+import httpx
+import torch
 import numpy as np
-from dotenv import load_dotenv
-from supabase import create_client, Client
-from models.sequence_lstm import CrashSequenceLSTM
+from models.sequence_lstm import CrashLSTM
 
-load_dotenv()
+API_HISTORY_URL = os.getenv("API_HISTORY_URL", "http://localhost:8000/api/history?limit=15")
+API_SIGNAL_UPDATE_URL = os.getenv("API_SIGNAL_UPDATE_URL", "http://localhost:8000/api/signals/update")
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-
-class ModelTrainer:
-    def __init__(self, seq_len: int = 10):
-        self.seq_len = seq_len
-        self.supabase: Optional[Client] = None
-        self.setup_supabase()
-        self.lstm = CrashSequenceLSTM(sequence_length=seq_len)
-
-    def setup_supabase(self):
-        if SUPABASE_URL and SUPABASE_KEY and "your-project" not in SUPABASE_URL:
+class AnalyticsEngine:
+    """
+    Coordinates historical polling, PyTorch LSTM tensor formatting,
+    inference computations, and signal dispatching back to the FastAPI gateway.
+    """
+    def __init__(self, sequence_length: int = 15):
+        self.sequence_length = sequence_length
+        self.model = CrashLSTM(input_dim=1, hidden_dim=64, num_layers=2, output_dim=1)
+        self.model.eval()  # Set evaluation mode
+        
+        # Load weights checkpoint if exists, otherwise run with initial weights
+        checkpoint_path = "checkpoints/lstm_aviator.pth"
+        if os.path.exists(checkpoint_path):
             try:
-                self.supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+                self.model.load_state_dict(torch.load(checkpoint_path, map_location=torch.device('cpu')))
+                print(f"[Analytics] Loaded model weights from {checkpoint_path}")
             except Exception as e:
-                print(f"[Analytics] Supabase connection failed: {e}")
+                print(f"[Analytics] Error loading weights checkpoint: {e}. Using initial weights.")
+        else:
+            print("[Analytics] Checkpoint not found. Running inference with initial model weights.")
 
-    def fetch_data(self) -> np.ndarray:
+    def preprocess_sequence(self, multipliers: list) -> torch.Tensor:
         """
-        Pulls multipliers from Supabase or falls back to simulated data.
+        Pads or truncates historical multipliers list, normalizes values,
+        and formats into a FloatTensor batch shape: (1, seq_len, 1).
         """
-        if self.supabase:
-            try:
-                response = self.supabase.table("multiplier_history") \
-                    .select("multiplier") \
-                    .order("timestamp", desc=True) \
-                    .limit(1000) \
-                    .execute()
-                data = response.data
-                if data and len(data) > 50:
-                    print(f"[Analytics] Pulled {len(data)} records from database.")
-                    return np.array([float(r["multiplier"]) for r in data])
-            except Exception as e:
-                print(f"[Analytics] Database fetch error: {e}")
-        
-        # Simulated Pareto distribution dataset fallback for offline training
-        print("[Analytics] Generating simulated Pareto dataset (1,500 games) for local training...")
-        u = np.random.uniform(0.0, 0.97, 1500)
-        multipliers = 0.97 / (1.0 - u)
-        return np.clip(multipliers, 1.00, 50.00)
-
-    def prepare_sequences(self, data: np.ndarray):
-        """
-        Converts 1D list of multipliers into sequence blocks.
-        Input: [1.2, 1.5, 2.4, 1.1, 1.8, 2.5]
-        X: Sequence of size seq_len
-        Y: 1 if next multiplier >= 2.0x else 0
-        """
-        x_data = []
-        y_data = []
-        
-        for i in range(len(data) - self.seq_len):
-            seq = data[i : i + self.seq_len]
-            target = data[i + self.seq_len]
+        seq = list(multipliers)
+        # Pad with 1.0 if sequence is shorter than targeted length
+        if len(seq) < self.sequence_length:
+            seq = [1.0] * (self.sequence_length - len(seq)) + seq
+        # Truncate if longer
+        elif len(seq) > self.sequence_length:
+            seq = seq[-self.sequence_length:]
             
-            # Normalize sequence inputs (e.g. log scaling to squeeze extreme values)
-            seq_norm = np.log1p(seq)
-            target_bin = 1 if target >= 2.00 else 0
-            
-            x_data.append(seq_norm)
-            y_data.append(target_bin)
-            
-        return np.array(x_data, dtype=np.float32), np.array(y_data, dtype=np.float32)
+        # Log-normalize values to prevent numerical instability from massive multipliers
+        normalized = [np.log1p(x) for x in seq]
+        tensor_seq = torch.FloatTensor(normalized).view(1, self.sequence_length, 1)
+        return tensor_seq
 
-    def run(self):
-        # 1. Pull data
-        raw_multipliers = self.fetch_data()
+    def generate_trading_signal(self, probability: float, last_few: list) -> dict:
+        """
+        Maps probability scores and sequence patterns (e.g. streaks) to trading signals.
+        Supports a "short-term 5 wins" strategy targeting low, high-probability multiplier cashouts.
+        """
+        # Fallback check: if there's a streak of consecutive low crashes (e.g., < 1.2x), risk increases
+        low_streak = sum(1 for x in last_few[-3:] if x < 1.30)
         
-        # 2. Reformat to sequences
-        x, y = self.prepare_sequences(raw_multipliers)
-        print(f"[Analytics] Created sequence shapes: X={x.shape}, Y={y.shape}")
-        
-        # 3. Train LSTM
-        print("[Analytics] Compiling and training Keras LSTM neural network...")
-        self.lstm.train(x, y, epochs=5, batch_size=32)
-        
-        # 4. Save checkpoints
-        os.makedirs("checkpoints", exist_ok=True)
-        self.lstm.save_weights("checkpoints/lstm_aviator_weights.h5")
-        print("[Analytics] Saved trained weights to checkpoints/lstm_aviator_weights.h5")
+        if low_streak >= 2:
+            prediction = "WAIT: Cold Streak Recovery"
+            target_mult = 1.00
+        elif probability >= 0.70:
+            prediction = "HIGH PROBABILITY: Enter at 1.35x"
+            target_mult = 1.35
+        elif probability >= 0.50:
+            prediction = "MEDIUM PROBABILITY: Enter at 1.20x"
+            target_mult = 1.20
+        else:
+            prediction = "WAIT: Downward Trend"
+            target_mult = 1.00
 
-        # 5. Verify single inference prediction
-        sample_seq = np.log1p(raw_multipliers[:self.seq_len])
-        prob = self.lstm.predict_probability(sample_seq)
-        print(f"[Analytics] Sample inference win probability for next round: {prob * 100:.2f}%")
+        return {
+            "prediction": prediction,
+            "probability": round(probability, 4),
+            "threshold": target_mult,
+            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        }
+
+    async def run_loop(self):
+        print("[Analytics] LSTM Ingestion loop active. Listening for history updates...")
+        last_processed_timestamp = None
+        
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            while True:
+                try:
+                    # Query backend history endpoint
+                    response = await client.get(API_HISTORY_URL)
+                    if response.status_code == 200:
+                        records = response.json()
+                        if not records:
+                            await asyncio.sleep(4.0)
+                            continue
+
+                        # Check if any new records are available by comparing last timestamp
+                        latest_record = records[-1]
+                        latest_timestamp = latest_record.get("timestamp")
+                        
+                        if latest_timestamp != last_processed_timestamp:
+                            last_processed_timestamp = latest_timestamp
+                            
+                            # Extract multipliers list
+                            multipliers = [float(r.get("multiplier", 1.0)) for r in records]
+                            
+                            # Run LSTM forward pass
+                            input_tensor = self.preprocess_sequence(multipliers)
+                            with torch.no_grad():
+                                prob_tensor = self.model(input_tensor)
+                                probability = float(prob_tensor.item())
+
+                            # Map to signal
+                            signal = self.generate_trading_signal(probability, multipliers[-5:])
+                            print(f"[Analytics] Signal Update: {signal['prediction']} (P={signal['probability']:.4f})")
+                            
+                            # Post signal to FastAPI server
+                            try:
+                                update_resp = await client.post(API_SIGNAL_UPDATE_URL, json=signal)
+                                if update_resp.status_code != 200:
+                                    print(f"[Analytics] Failed to post signal: HTTP {update_resp.status_code}")
+                            except Exception as e:
+                                print(f"[Analytics] Ingestion POST error: {e}")
+                    else:
+                        print(f"[Analytics] Failed to fetch history: HTTP {response.status_code}")
+                except Exception as e:
+                    print(f"[Analytics] Predictor loop exception: {e}")
+                
+                # Check for new rounds every 3 seconds
+                await asyncio.sleep(3.0)
 
 if __name__ == "__main__":
-    trainer = ModelTrainer()
-    trainer.run()
+    engine = AnalyticsEngine()
+    try:
+        asyncio.run(engine.run_loop())
+    except KeyboardInterrupt:
+        print("[Analytics] Stopped by user command.")
