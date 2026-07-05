@@ -14,7 +14,19 @@ interface MultiplierChartProps {
 }
 
 export function MultiplierChart({ data }: MultiplierChartProps) {
-  // Take last 50 entries
+  const totalFlights = data.length;
+  
+  // Calculate historical win rates across all session flights
+  const consWins = data.filter(d => d.multiplier >= 1.15).length;
+  const consRate = totalFlights > 0 ? (consWins / totalFlights) * 100 : 0;
+  
+  const balWins = data.filter(d => d.multiplier >= 1.35).length;
+  const balRate = totalFlights > 0 ? (balWins / totalFlights) * 100 : 0;
+  
+  const aggWins = data.filter(d => d.multiplier >= 1.70).length;
+  const aggRate = totalFlights > 0 ? (aggWins / totalFlights) * 100 : 0;
+
+  // Take last 50 entries for visual line chart progression
   const chartData = data.slice(-50).map((d, index) => ({
     index: index + 1,
     multiplier: d.multiplier,
@@ -22,12 +34,15 @@ export function MultiplierChart({ data }: MultiplierChartProps) {
   }));
 
   return (
-    <div className="glass-panel rounded-2xl p-6 border border-white/5 bg-[#0d0d0d] flex flex-col gap-5 flex-1">
+    <div className="glass-panel rounded-2xl p-6 border border-white/5 bg-[#0d0d0d] flex flex-col gap-6 flex-1">
+      
+      {/* Title block */}
       <div className="border-b border-white/5 pb-4">
         <h2 className="text-lg font-bold tracking-tight text-white uppercase">Multiplier Progression</h2>
         <p className="text-xs text-neutral-400 mt-0.5">Chronological crash points (last 50 flights)</p>
       </div>
 
+      {/* Chart container */}
       <div className="h-[300px] w-full bg-[#050505] rounded-xl p-2 border border-white/5">
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
@@ -80,6 +95,64 @@ export function MultiplierChart({ data }: MultiplierChartProps) {
           </div>
         )}
       </div>
+
+      {/* Live Backtest Win Rates Section */}
+      <div className="border-t border-white/5 pt-5 flex flex-col gap-4">
+        <div className="flex flex-col">
+          <span className="text-xs font-bold uppercase tracking-wider text-white">Historical Strategy Performance</span>
+          <span className="text-[10px] text-neutral-500 mt-0.5 font-mono uppercase tracking-wide">
+            Live backtest success rates calculated across all {totalFlights} session flights
+          </span>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-1">
+          {/* Conservative Win Rate */}
+          <div className="bg-[#050505] p-4 rounded-xl border border-white/5 flex flex-col gap-3 font-mono">
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] text-neutral-555 uppercase font-bold text-neutral-400">Conservative Strategy (1.15x)</span>
+              <span className="text-2xl font-black text-white">{consRate.toFixed(1)}%</span>
+              <span className="text-[10px] text-neutral-500 mt-0.5">{consWins} of {totalFlights} wins</span>
+            </div>
+            <div className="w-full bg-neutral-900 h-1.5 rounded-full overflow-hidden">
+              <div 
+                className="bg-orange-500 h-full rounded-full transition-all duration-500" 
+                style={{ width: `${consRate}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* Balanced Win Rate */}
+          <div className="bg-[#050505] p-4 rounded-xl border border-white/5 flex flex-col gap-3 font-mono">
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] text-neutral-555 uppercase font-bold text-neutral-400">Balanced LSTM Strategy (1.35x)</span>
+              <span className="text-2xl font-black text-white">{balRate.toFixed(1)}%</span>
+              <span className="text-[10px] text-neutral-500 mt-0.5">{balWins} of {totalFlights} wins</span>
+            </div>
+            <div className="w-full bg-neutral-900 h-1.5 rounded-full overflow-hidden">
+              <div 
+                className="bg-orange-500 h-full rounded-full transition-all duration-500" 
+                style={{ width: `${balRate}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* Aggressive Win Rate */}
+          <div className="bg-[#050505] p-4 rounded-xl border border-white/5 flex flex-col gap-3 font-mono">
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] text-neutral-555 uppercase font-bold text-neutral-400">Aggressive Strategy (1.70x)</span>
+              <span className="text-2xl font-black text-white">{aggRate.toFixed(1)}%</span>
+              <span className="text-[10px] text-neutral-500 mt-0.5">{aggWins} of {totalFlights} wins</span>
+            </div>
+            <div className="w-full bg-neutral-900 h-1.5 rounded-full overflow-hidden">
+              <div 
+                className="bg-orange-500 h-full rounded-full transition-all duration-500" 
+                style={{ width: `${aggRate}%` }}
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
     </div>
   );
 }
