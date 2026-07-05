@@ -14,7 +14,7 @@ interface PatternTableProps {
 
 export function PatternTable({ data }: PatternTableProps) {
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const itemsPerPage = 8;
+  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
 
   // Clone and reverse history array so that the newest is displayed first in the table
   const reversedData = [...data].reverse();
@@ -35,9 +35,31 @@ export function PatternTable({ data }: PatternTableProps) {
 
   return (
     <div className="glass-panel rounded-2xl p-6 border border-white/5 bg-[#0d0d0d] flex flex-col gap-4 flex-1">
-      <div className="border-b border-white/5 pb-4">
-        <h2 className="text-lg font-bold tracking-tight text-white uppercase">Historical Flights</h2>
-        <p className="text-xs text-neutral-400 mt-0.5">Live records parsed from the web listener stream</p>
+      
+      {/* Header and Rows Selector */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+        <div>
+          <h2 className="text-lg font-bold tracking-tight text-white uppercase">Historical Flights</h2>
+          <p className="text-xs text-neutral-400 mt-0.5">Live records parsed from the web listener stream</p>
+        </div>
+        
+        {/* Limit Selector */}
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-neutral-500 uppercase font-bold tracking-wider">Rows per page:</span>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => {
+              setItemsPerPage(Number(e.target.value));
+              setCurrentPage(1); // Reset to page 1 on page size alteration
+            }}
+            className="bg-[#050505] border border-neutral-850 text-neutral-300 rounded px-2.5 py-1 text-xs font-mono focus:outline-none focus:border-orange-500 cursor-pointer transition-colors"
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
@@ -86,7 +108,7 @@ export function PatternTable({ data }: PatternTableProps) {
       {totalPages > 1 && (
         <div className="flex items-center justify-between border-t border-white/5 pt-4 mt-auto">
           <span className="text-xs text-neutral-500 font-mono">
-            Page {currentPage} of {totalPages}
+            Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, reversedData.length)} of {reversedData.length} records
           </span>
           <div className="flex items-center gap-2">
             <button

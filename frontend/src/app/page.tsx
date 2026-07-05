@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { MultiplierChart } from "@/components/dashboard/multiplier-chart";
 import { PatternTable } from "@/components/dashboard/pattern-table";
@@ -11,6 +11,7 @@ const WS_URL = "ws://localhost:8000/ws/dashboard";
 
 export default function AviatorDashboard() {
   const { isConnected, latestTelemetry, history } = useWebSocket(WS_URL);
+  const [activeTab, setActiveTab] = useState<"analytics" | "history">("analytics");
 
   const signal = latestTelemetry?.signal || { prediction: "AWAITING DATA", probability: 0, threshold: 0, timestamp: null };
   const scraperStatus = latestTelemetry?.status || { healthy: false, last_scrape_timestamp: null, total_daily_records: 0 };
@@ -38,19 +39,61 @@ export default function AviatorDashboard() {
           </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-2">
-          {/* Left Column: Charts and Logs */}
-          <div className="lg:col-span-2 flex flex-col gap-6">
-            <MultiplierChart data={history} />
-            <PatternTable data={history} />
-          </div>
-
-          {/* Right Column: AI Signals & Server Health */}
-          <div className="flex flex-col gap-6">
-            <SignalAlerts signal={signal} />
-            <ScraperStatus status={scraperStatus} isConnected={isConnected} />
-          </div>
+        {/* Tab Navigation Menu */}
+        <div className="flex gap-6 border-b border-neutral-900 pb-2">
+          <button
+            onClick={() => setActiveTab("analytics")}
+            className={`pb-2 px-1 text-xs font-bold uppercase tracking-wider transition-all relative cursor-pointer ${
+              activeTab === "analytics" ? "text-orange-500" : "text-neutral-500 hover:text-white"
+            }`}
+          >
+            Analytics
+            {activeTab === "analytics" && (
+              <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-orange-500"></span>
+            )}
+          </button>
+          
+          <button
+            onClick={() => setActiveTab("history")}
+            className={`pb-2 px-1 text-xs font-bold uppercase tracking-wider transition-all relative cursor-pointer ${
+              activeTab === "history" ? "text-orange-500" : "text-neutral-500 hover:text-white"
+            }`}
+          >
+            History
+            {activeTab === "history" && (
+              <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-orange-500"></span>
+            )}
+          </button>
         </div>
+
+        {/* Dashboard Grid Workspace Toggle */}
+        {activeTab === "analytics" ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-2">
+            {/* Left Column: Multiplier Chart */}
+            <div className="lg:col-span-2 flex flex-col gap-6">
+              <MultiplierChart data={history} />
+            </div>
+
+            {/* Right Column: AI Signals & Server Health */}
+            <div className="flex flex-col gap-6">
+              <SignalAlerts signal={signal} />
+              <ScraperStatus status={scraperStatus} isConnected={isConnected} />
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-2">
+            {/* Left Column: Historical Table with Limit Selector */}
+            <div className="lg:col-span-2 flex flex-col gap-6">
+              <PatternTable data={history} />
+            </div>
+
+            {/* Right Column: Pipeline Status check */}
+            <div className="flex flex-col gap-6">
+              <ScraperStatus status={scraperStatus} isConnected={isConnected} />
+            </div>
+          </div>
+        )}
+        
       </div>
     </div>
   );
