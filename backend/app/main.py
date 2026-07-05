@@ -34,7 +34,8 @@ class SystemStateStore:
             "prediction": "WAIT: Downward Trend",
             "probability": 0.45,
             "threshold": 1.50,
-            "timestamp": None
+            "timestamp": None,
+            "strategies": None
         }
         self.scraper_status: Dict[str, Any] = {
             "healthy": False,
@@ -108,7 +109,8 @@ async def update_signals(signal_payload: Dict[str, Any]):
         "prediction": signal_payload.get("prediction", "WAIT"),
         "probability": signal_payload.get("probability", 0.0),
         "threshold": signal_payload.get("threshold", 1.50),
-        "timestamp": signal_payload.get("timestamp")
+        "timestamp": signal_payload.get("timestamp"),
+        "strategies": signal_payload.get("strategies")  # Map dynamic strategy properties
     }
     
     # Broadcast updating predictions payload immediately to dashboard WS clients
