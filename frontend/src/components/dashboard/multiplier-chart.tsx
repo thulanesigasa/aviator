@@ -2,7 +2,6 @@
 
 import React from "react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import { Activity } from "lucide-react";
 
 interface CrashData {
   id?: number;
@@ -23,36 +22,31 @@ export function MultiplierChart({ data }: MultiplierChartProps) {
   }));
 
   return (
-    <div className="glass-panel rounded-2xl p-6 border border-white/5 bg-black/40 flex flex-col gap-5 flex-1">
-      <div className="flex items-center gap-3 border-b border-white/5 pb-4 justify-between">
-        <div className="flex items-center gap-3">
-          <Activity className="text-primary-electric w-5 h-5 animate-pulse" />
-          <div>
-            <h2 className="text-lg font-semibold tracking-wide">Multiplier Progression</h2>
-            <p className="text-xs text-gray-400">Crash multiplier chronological trends (last 50 flights)</p>
-          </div>
-        </div>
+    <div className="glass-panel rounded-2xl p-6 border border-white/5 bg-[#0d0d0d] flex flex-col gap-5 flex-1">
+      <div className="border-b border-white/5 pb-4">
+        <h2 className="text-lg font-bold tracking-tight text-white uppercase">Multiplier Progression</h2>
+        <p className="text-xs text-neutral-400 mt-0.5">Chronological crash points (last 50 flights)</p>
       </div>
 
-      <div className="h-[300px] w-full bg-black/20 rounded-xl p-2 border border-white/5">
+      <div className="h-[300px] w-full bg-[#050505] rounded-xl p-2 border border-white/5">
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorMultiplier" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="rgb(244,63,94)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="rgb(244,63,94)" stopOpacity={0.0} />
+                  <stop offset="5%" stopColor="rgb(255, 102, 0)" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="rgb(255, 102, 0)" stopOpacity={0.0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
               <XAxis 
                 dataKey="index" 
-                stroke="rgba(255,255,255,0.3)" 
+                stroke="rgba(255,255,255,0.2)" 
                 fontSize={11} 
                 tickLine={false} 
               />
               <YAxis 
-                stroke="rgba(255,255,255,0.3)" 
+                stroke="rgba(255,255,255,0.2)" 
                 fontSize={11} 
                 tickLine={false} 
                 domain={[1.0, 'auto']}
@@ -60,28 +54,28 @@ export function MultiplierChart({ data }: MultiplierChartProps) {
               />
               <Tooltip 
                 contentStyle={{
-                  background: "rgba(13, 17, 33, 0.95)",
-                  borderColor: "rgba(255, 255, 255, 0.1)",
-                  borderRadius: "12px",
+                  background: "#0d0d0d",
+                  borderColor: "rgba(255, 255, 255, 0.08)",
+                  borderRadius: "8px",
                 }}
-                labelStyle={{ color: "#888", fontSize: "11px" }}
-                itemStyle={{ color: "#fff", fontWeight: "bold" }}
+                labelStyle={{ color: "#737373", fontSize: "11px" }}
+                itemStyle={{ color: "#ff6600", fontWeight: "bold" }}
                 formatter={(value: any) => [`${parseFloat(value).toFixed(2)}x`, "Multiplier"]}
                 labelFormatter={(label) => `Flight #${label}`}
               />
               <Area 
                 type="monotone" 
                 dataKey="multiplier" 
-                stroke="rgb(244,63,94)" 
-                strokeWidth={2.5}
+                stroke="#ff6600" 
+                strokeWidth={2}
                 fillOpacity={1} 
                 fill="url(#colorMultiplier)" 
-                activeDot={{ r: 6, stroke: "#000", strokeWidth: 2 }}
+                activeDot={{ r: 5, stroke: "#000", strokeWidth: 2, fill: "#ff6600" }}
               />
             </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-xs text-gray-500 gap-2">
+          <div className="w-full h-full flex flex-col items-center justify-center text-xs text-neutral-500 gap-2">
             <span>Awaiting telemetry data stream to hydrate chart...</span>
           </div>
         )}

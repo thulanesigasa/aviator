@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { History, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface CrashData {
   id?: number;
@@ -26,32 +25,29 @@ export function PatternTable({ data }: PatternTableProps) {
 
   const getBadgeStyle = (mult: number) => {
     if (mult < 1.20) {
-      return "bg-danger-rose/10 border-danger-rose/20 text-danger-rose";
+      return "bg-red-950/30 border-red-900/50 text-red-500";
     }
     if (mult >= 2.00) {
-      return "bg-success-emerald/10 border-success-emerald/20 text-success-emerald shadow-[0_0_12px_rgba(16,185,129,0.15)]";
+      return "bg-orange-950/30 border-orange-500/50 text-orange-500";
     }
-    return "bg-white/5 border-white/10 text-gray-300";
+    return "bg-neutral-900/30 border-neutral-800 text-neutral-400";
   };
 
   return (
-    <div className="glass-panel rounded-2xl p-6 border border-white/5 bg-black/40 flex flex-col gap-4 flex-1">
-      <div className="flex items-center gap-3 border-b border-white/5 pb-4">
-        <History className="text-primary-electric w-5 h-5" />
-        <div>
-          <h2 className="text-lg font-semibold tracking-wide">Historical Crashes</h2>
-          <p className="text-xs text-gray-400">Live records parsed from the web listener stream</p>
-        </div>
+    <div className="glass-panel rounded-2xl p-6 border border-white/5 bg-[#0d0d0d] flex flex-col gap-4 flex-1">
+      <div className="border-b border-white/5 pb-4">
+        <h2 className="text-lg font-bold tracking-tight text-white uppercase">Historical Flights</h2>
+        <p className="text-xs text-neutral-400 mt-0.5">Live records parsed from the web listener stream</p>
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse text-sm">
           <thead>
-            <tr className="border-b border-white/5 text-gray-400">
-              <th className="py-3 px-2 font-medium">Index</th>
-              <th className="py-3 px-2 font-medium">Multiplier</th>
-              <th className="py-3 px-2 font-medium">Timestamp (UTC)</th>
-              <th className="py-3 px-2 font-medium">Outcome Status</th>
+            <tr className="border-b border-white/5 text-neutral-500">
+              <th className="py-3 px-2 font-medium uppercase text-xs">Index</th>
+              <th className="py-3 px-2 font-medium uppercase text-xs">Multiplier</th>
+              <th className="py-3 px-2 font-medium uppercase text-xs">Timestamp (UTC)</th>
+              <th className="py-3 px-2 font-medium uppercase text-xs">Outcome Status</th>
             </tr>
           </thead>
           <tbody>
@@ -59,16 +55,16 @@ export function PatternTable({ data }: PatternTableProps) {
               paginatedData.map((item, index) => {
                 const globalIndex = reversedData.length - (startIndex + index);
                 return (
-                  <tr key={index} className="border-b border-white/5 hover:bg-white/2 transition-colors">
-                    <td className="py-3 px-2 font-mono text-gray-500">#{globalIndex}</td>
+                  <tr key={index} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors">
+                    <td className="py-3 px-2 font-mono text-neutral-500">#{globalIndex}</td>
                     <td className="py-3 px-2 font-bold font-mono text-white">
                       {item.multiplier.toFixed(2)}x
                     </td>
-                    <td className="py-3 px-2 text-gray-400 font-mono">
+                    <td className="py-3 px-2 text-neutral-400 font-mono">
                       {new Date(item.timestamp).toISOString().replace("T", " ").slice(0, 19)}
                     </td>
                     <td className="py-3 px-2">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${getBadgeStyle(item.multiplier)}`}>
+                      <span className={`px-2.5 py-0.5 rounded border text-[10px] font-bold tracking-wider ${getBadgeStyle(item.multiplier)}`}>
                         {item.multiplier < 1.20 ? "COLD" : item.multiplier >= 2.00 ? "HOT" : "STABLE"}
                       </span>
                     </td>
@@ -77,7 +73,7 @@ export function PatternTable({ data }: PatternTableProps) {
               })
             ) : (
               <tr>
-                <td colSpan={4} className="py-8 text-center text-gray-500 text-xs">
+                <td colSpan={4} className="py-8 text-center text-neutral-600 text-xs">
                   No historical flight records found.
                 </td>
               </tr>
@@ -89,23 +85,23 @@ export function PatternTable({ data }: PatternTableProps) {
       {/* Pagination Controls */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between border-t border-white/5 pt-4 mt-auto">
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-neutral-500 font-mono">
             Page {currentPage} of {totalPages}
           </span>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setCurrentPage((c) => Math.max(c - 1, 1))}
               disabled={currentPage === 1}
-              className="p-1 rounded bg-white/5 border border-white/5 text-gray-400 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+              className="px-2.5 py-1 text-[11px] font-bold rounded bg-neutral-900 border border-neutral-800 text-neutral-400 hover:bg-neutral-800 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
             >
-              <ChevronLeft className="w-4 h-4" />
+              PREV
             </button>
             <button
               onClick={() => setCurrentPage((c) => Math.min(c + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className="p-1 rounded bg-white/5 border border-white/5 text-gray-400 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+              className="px-2.5 py-1 text-[11px] font-bold rounded bg-neutral-900 border border-neutral-800 text-neutral-400 hover:bg-neutral-800 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
             >
-              <ChevronRight className="w-4 h-4" />
+              NEXT
             </button>
           </div>
         </div>

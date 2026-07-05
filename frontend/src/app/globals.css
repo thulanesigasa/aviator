@@ -1,30 +1,29 @@
 @import "tailwindcss";
 
 :root {
-  --background: #05060b;
-  --foreground: #f3f4f6;
-  --card: rgba(9, 11, 20, 0.75);
-  --card-border: rgba(255, 255, 255, 0.04);
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #0d0d0d;
+  --card-border: rgba(255, 255, 255, 0.06);
   
-  --primary: 250 95% 65%;
+  --primary: 24 100% 50%; /* Orange */
   --primary-foreground: 0 0% 100%;
   
-  --success: 150 84% 58%;
-  --destructive: 342 85% 60%;
-  --warning: 42 95% 55%;
-  --accent: 195 90% 55%;
+  --success: 142 76% 45%;
+  --destructive: 0 84% 60%;
+  --warning: 38 92% 50%;
+  --accent: 24 100% 50%;
 }
 
 @theme {
-  --color-bg-dark: #05060b;
-  --color-card-dark: rgba(9, 11, 20, 0.75);
-  --color-border-dark: rgba(255, 255, 255, 0.04);
+  --color-bg-dark: #000000;
+  --color-card-dark: #0d0d0d;
+  --color-border-dark: rgba(255, 255, 255, 0.06);
   
-  --color-primary-electric: hsl(250, 95%, 65%);
-  --color-success-emerald: hsl(150, 84%, 58%);
-  --color-danger-rose: hsl(342, 85%, 60%);
-  --color-warning-amber: hsl(42, 95%, 55%);
-  --color-accent-cyan: hsl(195, 90%, 55%);
+  --color-primary-orange: #ff6600;
+  --color-success-green: #22c55e;
+  --color-danger-red: #ef4444;
+  --color-muted-gray: #a3a3a3;
 }
 
 body {
@@ -33,52 +32,48 @@ body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
   background-image: 
-    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.08) 0px, transparent 50%);
+    radial-gradient(at 0% 0%, rgba(255, 102, 0, 0.03) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(255, 255, 255, 0.01) 0px, transparent 50%);
   background-attachment: fixed;
 }
 
-/* Glassmorphism panel styling */
+/* Minimal card panel styling */
 .glass-panel {
   background: var(--card);
-  backdrop-filter: blur(16px);
   border: 1px solid var(--card-border);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s ease-in-out;
 }
 
 .glass-panel:hover {
-  border-color: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.6);
-  transform: translateY(-2px);
+  border-color: rgba(255, 102, 0, 0.2);
 }
 
 /* Custom glow transitions */
 @keyframes pulseGlow {
   0%, 100% {
-    box-shadow: 0 0 15px rgba(245, 158, 11, 0.15);
+    box-shadow: 0 0 12px rgba(255, 102, 0, 0.05);
   }
   50% {
-    box-shadow: 0 0 25px rgba(245, 158, 11, 0.35);
+    box-shadow: 0 0 20px rgba(255, 102, 0, 0.15);
   }
 }
 
 .glow-active {
-  animation: pulseGlow 2.5s infinite;
+  animation: pulseGlow 3s infinite;
 }
 
 /* Scrollbar styles */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: #05060b;
+  background: #000000;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.07);
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 102, 0, 0.3);
 }
