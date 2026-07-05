@@ -79,7 +79,7 @@ async def ingest_crash(payload: CrashPayload):
         raise HTTPException(status_code=500, detail=f"Database write failure: {e}")
 
 @app.get("/api/history")
-async def get_history(limit: int = 50):
+async def get_history(limit: int = 1000):
     """
     HTTP endpoint retrieving recent crash records from Supabase.
     """

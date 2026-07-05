@@ -14,7 +14,7 @@ async def insert_crash_record(multiplier: float, timestamp: str):
     }).execute()
     return data
 
-async def fetch_recent_crashes(limit: int = 50):
+async def fetch_recent_crashes(limit: int = 1000):
     """Fetches the most recent crashes for the LSTM model and UI."""
     response = supabase.table("crash_history").select("*").order("timestamp", desc=True).limit(limit).execute()
     return response

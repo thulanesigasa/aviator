@@ -35,7 +35,7 @@ export function useWebSocket(url: string) {
   // Fetch initial history from FastAPI HTTP endpoint to seed chart and tables
   const fetchInitialHistory = useCallback(async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/history?limit=50");
+      const res = await fetch("http://localhost:8000/api/history?limit=1000");
       if (res.ok) {
         const data = await res.json();
         setHistory(data);
@@ -89,10 +89,10 @@ export function useWebSocket(url: string) {
             status: (msg.status as ScraperStatusData) || prev?.status
           }));
           
-          // Append to history and enforce 50-limit bounding
+          // Append to history and enforce 1000-limit bounding
           setHistory((prev) => {
             const nextHistory = [...prev, record];
-            if (nextHistory.length > 50) {
+            if (nextHistory.length > 1000) {
               nextHistory.shift();
             }
             return nextHistory;
