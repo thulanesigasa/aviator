@@ -118,10 +118,10 @@ export function GlobalLayout({ children }: { children: React.ReactNode }) {
           {/* Policies Links */}
           <div className="flex flex-col gap-3">
             <span className="text-xs font-bold uppercase tracking-wider">Policies</span>
-            <div className="flex flex-col gap-2 text-xs text-neutral-400 font-medium">
-              <Link href="/policies" className="text-left hover:text-orange-500 transition-colors">Privacy Policy</Link>
-              <Link href="/policies" className="text-left hover:text-orange-500 transition-colors font-mono">Terms of Service</Link>
-              <Link href="/policies" className="text-left hover:text-orange-500 transition-colors font-mono">Risk Disclaimer</Link>
+            <div className="flex flex-col gap-2 text-xs text-neutral-404 font-mono font-medium text-neutral-400">
+              <Link href="/policies?tab=privacy" className="text-left hover:text-orange-500 transition-colors">Privacy Policy</Link>
+              <Link href="/policies?tab=terms" className="text-left hover:text-orange-500 transition-colors">Terms of Service</Link>
+              <Link href="/policies?tab=disclaimer" className="text-left hover:text-orange-500 transition-colors">Risk Disclaimer</Link>
             </div>
           </div>
 
