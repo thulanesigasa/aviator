@@ -35,11 +35,45 @@ export function PatternTable({ data, selectedDate, availableDates, onDateChange 
     return "bg-neutral-900/30 border-neutral-800 text-neutral-400";
   };
 
+  // Generate and download client-side CSV spreadsheet
+  const handleExportCSV = () => {
+    if (data.length === 0) return;
+    
+    const headers = ["Index", "Multiplier", "Timestamp (UTC)", "Outcome"];
+    const rows = data.map((item, index) => {
+      const outcome = item.multiplier < 1.20 ? "COLD" : item.multiplier >= 2.00 ? "HOT" : "STABLE";
+      const timestamp = new Date(item.timestamp).toISOString().replace("T", " ").slice(0, 19);
+      return [
+        `#${index + 1}`,
+        `${item.multiplier.toFixed(2)}x`,
+        timestamp,
+        outcome
+      ];
+    });
+    
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(r => r.map(val => `"${val}"`).join(","))
+    ].join("\n");
+    
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    
+    const dateLabel = selectedDate === "today" ? new Date().toLocaleDateString('sv-SE') : selectedDate;
+    link.setAttribute("download", `aviator_history_${dateLabel}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="glass-panel rounded-2xl p-6 border border-white/5 bg-[#0d0d0d] flex flex-col gap-4 flex-1">
       
       {/* Header and Selectors */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/5 pb-4">
         <div>
           <h2 className="text-lg font-bold tracking-tight text-white uppercase">Historical Flights</h2>
           <p className="text-xs text-neutral-400 mt-0.5">
@@ -50,7 +84,7 @@ export function PatternTable({ data, selectedDate, availableDates, onDateChange 
         </div>
         
         {/* Selectors Group */}
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3">
           
           {/* Day Selector */}
           <div className="flex items-center gap-2">
@@ -94,6 +128,16 @@ export function PatternTable({ data, selectedDate, availableDates, onDateChange 
               <option value={100}>100</option>
             </select>
           </div>
+
+          {/* Export CSV Button */}
+          <button
+            onClick={handleExportCSV}
+            disabled={data.length === 0}
+            className="bg-orange-500 hover:bg-orange-600 disabled:opacity-30 disabled:hover:bg-orange-500 text-black text-[10px] font-black tracking-wider uppercase px-3.5 py-1.5 rounded cursor-pointer transition-colors"
+          >
+            Export CSV
+          </button>
+
         </div>
       </div>
 
