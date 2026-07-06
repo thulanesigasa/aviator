@@ -143,9 +143,8 @@ export function useWebSocket(url: string) {
       reconnectTimeoutRef.current = setTimeout(connect, 3000);
     };
 
-    ws.onerror = (err) => {
-      console.error("[WS Hook] Socket error encountered:", err);
-      ws.close();
+    ws.onerror = () => {
+      console.warn("[WS Hook] Telemetry connection disrupted. Reconnect loop active.");
     };
   }, [url, fetchInitialHistory]);
 
