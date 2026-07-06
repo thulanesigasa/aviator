@@ -10,9 +10,12 @@ interface CrashData {
 
 interface PatternTableProps {
   data: CrashData[];
+  selectedDate: string;
+  availableDates: string[];
+  onDateChange: (date: string) => void;
 }
 
-export function PatternTable({ data }: PatternTableProps) {
+export function PatternTable({ data, selectedDate, availableDates, onDateChange }: PatternTableProps) {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
 
@@ -35,29 +38,62 @@ export function PatternTable({ data }: PatternTableProps) {
   return (
     <div className="glass-panel rounded-2xl p-6 border border-white/5 bg-[#0d0d0d] flex flex-col gap-4 flex-1">
       
-      {/* Header and Rows Selector */}
+      {/* Header and Selectors */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
         <div>
           <h2 className="text-lg font-bold tracking-tight text-white uppercase">Historical Flights</h2>
-          <p className="text-xs text-neutral-400 mt-0.5">Live records parsed from the web listener stream</p>
+          <p className="text-xs text-neutral-400 mt-0.5">
+            {selectedDate === "today" 
+              ? "Live records parsed from the web listener stream" 
+              : `Archived session logs for date: ${selectedDate}`}
+          </p>
         </div>
         
-        {/* Limit Selector */}
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] text-neutral-500 uppercase font-bold tracking-wider">Rows per page:</span>
-          <select
-            value={itemsPerPage}
-            onChange={(e) => {
-              setItemsPerPage(Number(e.target.value));
-              setCurrentPage(1); // Reset to page 1 on page size alteration
-            }}
-            className="bg-[#050505] border border-neutral-850 text-neutral-300 rounded px-2.5 py-1 text-xs font-mono focus:outline-none focus:border-orange-500 cursor-pointer transition-colors"
-          >
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
-          </select>
+        {/* Selectors Group */}
+        <div className="flex flex-wrap items-center gap-4">
+          
+          {/* Day Selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-neutral-500 uppercase font-bold tracking-wider">Date Archive:</span>
+            <select
+              value={selectedDate}
+              onChange={(e) => {
+                onDateChange(e.target.value);
+                setCurrentPage(1); // Reset page selection on date switch
+              }}
+              className="bg-[#050505] border border-neutral-850 text-neutral-300 rounded px-2.5 py-1 text-xs font-mono focus:outline-none focus:border-orange-500 cursor-pointer transition-colors"
+            >
+              <option value="today">Today (Live)</option>
+              {availableDates.map((date) => {
+                // Prevent rendering today as duplicate option
+                const todayStr = new Date().toLocaleDateString('sv-SE');
+                if (date === todayStr) return null;
+                return (
+                  <option key={date} value={date}>
+                    {date}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+
+          {/* Limit Selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-neutral-500 uppercase font-bold tracking-wider">Rows per page:</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => {
+                setItemsPerPage(Number(e.target.value));
+                setCurrentPage(1); // Reset to page 1 on page size alteration
+              }}
+              className="bg-[#050505] border border-neutral-850 text-neutral-300 rounded px-2.5 py-1 text-xs font-mono focus:outline-none focus:border-orange-500 cursor-pointer transition-colors"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { MultiplierChart } from "@/components/dashboard/multiplier-chart";
 import { PatternTable } from "@/components/dashboard/pattern-table";
@@ -19,9 +19,57 @@ export default function AviatorDashboard() {
   const [activeTab, setActiveTab] = useState<"analytics" | "history">("analytics");
   const [modal, setModal] = useState<ModalState | null>(null);
 
+  // Archive States
+  const [selectedDate, setSelectedDate] = useState<string>("today");
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [archivedHistory, setArchivedHistory] = useState<any[] | null>(null);
+
   const signal = latestTelemetry?.signal || { prediction: "AWAITING DATA", probability: 0, threshold: 0, timestamp: null };
   const scraperStatus = latestTelemetry?.status || { healthy: false, last_scrape_timestamp: null, total_daily_records: 0 };
   
+  const tzOffset = typeof window !== "undefined" ? -new Date().getTimezoneOffset() : 0;
+
+  // Poll unique calendar dates with telemetry logs from backend
+  useEffect(() => {
+    const fetchDates = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/api/history/dates?tz_offset=${tzOffset}`);
+        if (res.ok) {
+          const dates = await res.json();
+          setAvailableDates(dates);
+        }
+      } catch (err) {
+        console.error("Error loading historical dates:", err);
+      }
+    };
+
+    fetchDates();
+    const interval = setInterval(fetchDates, 15000);
+    return () => clearInterval(interval);
+  }, [tzOffset]);
+
+  // Query static history archives when non-today date is chosen
+  useEffect(() => {
+    if (selectedDate === "today") {
+      setArchivedHistory(null);
+      return;
+    }
+
+    const fetchArchive = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/api/history?limit=1000&date=${selectedDate}&tz_offset=${tzOffset}`);
+        if (res.ok) {
+          const data = await res.json();
+          setArchivedHistory(data);
+        }
+      } catch (err) {
+        console.error("Error loading archived data:", err);
+      }
+    };
+
+    fetchArchive();
+  }, [selectedDate, tzOffset]);
+
   const openModal = (title: string, content: React.ReactNode) => {
     setModal({ title, content });
   };
@@ -101,7 +149,7 @@ export default function AviatorDashboard() {
     <div className="min-h-screen bg-black text-white p-6 font-sans selection:bg-orange-500/30 flex flex-col justify-between gap-12">
       <div className="max-w-7xl mx-auto w-full flex flex-col gap-6">
         
-        {/* Header System with Navigation (no Auth) */}
+        {/* Header System with Navigation */}
         <header className="flex flex-col md:flex-row items-start md:items-center justify-between py-2 border-b border-white/5 pb-6 gap-4">
           <div className="flex items-center gap-3">
             <div>
@@ -175,9 +223,14 @@ export default function AviatorDashboard() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-2">
-            {/* Left Column: Historical Table with Limit Selector */}
+            {/* Left Column: Historical Table with dynamic Date Selector */}
             <div className="lg:col-span-2 flex flex-col gap-6">
-              <PatternTable data={history} />
+              <PatternTable 
+                data={selectedDate === "today" ? history : (archivedHistory || [])} 
+                selectedDate={selectedDate}
+                availableDates={availableDates}
+                onDateChange={setSelectedDate}
+              />
             </div>
 
             {/* Right Column: Pipeline Status check */}

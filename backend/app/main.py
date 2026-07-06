@@ -80,16 +80,39 @@ async def ingest_crash(payload: CrashPayload):
         raise HTTPException(status_code=500, detail=f"Database write failure: {e}")
 
 @app.get("/api/history")
-async def get_history(limit: int = 1000):
+async def get_history(limit: int = 1000, date: Optional[str] = None, tz_offset: int = 0):
     """
-    HTTP endpoint retrieving recent crash records from Supabase.
+    HTTP endpoint retrieving recent crash records from Supabase, optionally filtered by local date.
     """
     try:
-        response = await fetch_recent_crashes(limit)
+        response = await fetch_recent_crashes(limit, date_str=date, tz_offset=tz_offset)
         data = response.data or []
         # Re-sort to chronological order for dashboard charts
         data.reverse()
         return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/history/dates")
+async def get_history_dates(tz_offset: int = 0):
+    """
+    Retrieves unique dates that contain recorded flights, formatted in the client's local timezone.
+    """
+    try:
+        from datetime import datetime, timedelta
+        # Query up to 5000 recent rows to resolve unique dates
+        response = await fetch_recent_crashes(limit=5000)
+        data = response.data or []
+        dates = set()
+        for r in data:
+            ts_str = r.get("timestamp")
+            if ts_str:
+                # Parse UTC timestamp
+                dt = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+                # Adjust to local offset
+                local_dt = dt + timedelta(minutes=tz_offset)
+                dates.add(local_dt.strftime("%Y-%m-%d"))
+        return sorted(list(dates), reverse=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

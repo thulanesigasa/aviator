@@ -11,6 +11,11 @@ export interface SignalData {
   probability: number;
   threshold: number;
   timestamp: string | null;
+  strategies?: {
+    conservative: { name: string; target: number; confidence: number };
+    balanced: { name: string; target: number; confidence: number };
+    aggressive: { name: string; target: number; confidence: number };
+  };
 }
 
 export interface ScraperStatusData {
@@ -32,10 +37,12 @@ export function useWebSocket(url: string) {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Fetch initial history from FastAPI HTTP endpoint to seed chart and tables
+  // Fetch initial history filtered to Today's local date
   const fetchInitialHistory = useCallback(async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/history?limit=1000");
+      const todayStr = new Date().toLocaleDateString('sv-SE');
+      const tzOffset = -new Date().getTimezoneOffset();
+      const res = await fetch(`http://localhost:8000/api/history?limit=1000&date=${todayStr}&tz_offset=${tzOffset}`);
       if (res.ok) {
         const data = await res.json();
         setHistory(data);
@@ -89,8 +96,26 @@ export function useWebSocket(url: string) {
             status: (msg.status as ScraperStatusData) || prev?.status
           }));
           
-          // Append to history and enforce 1000-limit bounding
+          // Append to history and handle daily rollover resetting
           setHistory((prev) => {
+            const tzOffset = -new Date().getTimezoneOffset();
+            
+            // Helper to get local date from UTC timestamp
+            const getLocalDateString = (ts: string) => {
+              return new Date(new Date(ts).getTime() + (tzOffset * 60 * 1000)).toLocaleDateString('sv-SE');
+            };
+
+            const incomingLocalDate = getLocalDateString(record.timestamp);
+            
+            if (prev.length > 0) {
+              const lastLocalDate = getLocalDateString(prev[prev.length - 1].timestamp);
+              // If the day rolled over, clear previous history and start fresh with the new day's round!
+              if (incomingLocalDate !== lastLocalDate) {
+                console.log(`[WS Hook] New calendar day detected (${incomingLocalDate}). Clearing daily readings cache.`);
+                return [record];
+              }
+            }
+            
             const nextHistory = [...prev, record];
             if (nextHistory.length > 1000) {
               nextHistory.shift();
