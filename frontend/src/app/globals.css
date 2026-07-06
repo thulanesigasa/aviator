@@ -15,6 +15,46 @@
   --accent: 24 100% 50%;
 }
 
+.light-theme {
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #f7f7f7;
+  --card-border: rgba(0, 0, 0, 0.08);
+}
+
+.light-theme .bg-black {
+  background-color: var(--background) !important;
+}
+.light-theme .bg-\[\#0d0d0d\] {
+  background-color: var(--card) !important;
+}
+.light-theme .bg-\[\#050505\] {
+  background-color: #ededed !important;
+}
+.light-theme .border-white\/5, 
+.light-theme .border-neutral-850,
+.light-theme .border-neutral-900 {
+  border-color: var(--card-border) !important;
+}
+.light-theme .text-white {
+  color: var(--foreground) !important;
+}
+.light-theme .text-neutral-400, .light-theme .text-neutral-500 {
+  color: #525252 !important;
+}
+.light-theme .text-neutral-300 {
+  color: #262626 !important;
+}
+.light-theme ::-webkit-scrollbar-track {
+  background: #ffffff;
+}
+.light-theme ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+}
+.light-theme .text-orange-500 {
+  color: #ff6600 !important;
+}
+
 @theme {
   --color-bg-dark: #000000;
   --color-card-dark: #0d0d0d;
