@@ -1,11 +1,55 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import Link from "next/link";
 
+const policies = [
+  { 
+    id: "privacy", 
+    name: "Privacy Policy",
+    title: "1. Data Privacy & Telemetry Logging",
+    content: (
+      <div className="flex flex-col gap-4">
+        <p>This software operates strictly as a localized analysis tool. It attaches to Google Chrome over CDP port 9222 and only reads raw flight crash points and timestamps from the DOM layout tree.</p>
+        <p>No user account names, login passwords, security cookies, billing histories, or banking credentials are ever accessed, recorded, or transmitted to outside networks.</p>
+        <p>All recorded telemetry parameters are stored securely inside your local/private Supabase instance for model retraining sequences.</p>
+      </div>
+    )
+  },
+  { 
+    id: "terms", 
+    name: "Terms of Service",
+    title: "2. Terms of Local Execution",
+    content: (
+      <div className="flex flex-col gap-4">
+        <p>This quantitative sequence analyzer is designed for personal research, backtesting simulation checkups, and educational time-series exercises.</p>
+        <p>Commercial packaging, high-frequency bot integrations, or utilizing these projections as standard or guaranteed financial advisory advice is strictly prohibited.</p>
+        <p>You assume all technical and operational risks associated with deploying and running these scripts locally.</p>
+      </div>
+    )
+  },
+  { 
+    id: "disclaimer", 
+    name: "Risk Disclaimer",
+    title: "3. Strategy Risk Warning",
+    content: (
+      <div className="flex flex-col gap-4 text-orange-500">
+        <p className="font-bold">Important warning regarding sequence variance:</p>
+        <p>Recurrent Neural Network modeling (LSTM) maps and forecasts trends based on historical sequences. Because crash multiplier outcomes are generated independently, neural metrics do not guarantee safety or future positive performance.</p>
+        <p>Streak clusters, sudden down-trends, and immediate 1.00x crashes are common. Run simulation parameters with caution.</p>
+      </div>
+    )
+  }
+];
+
 export default function PoliciesPage() {
+  const [activePolicy, setActivePolicy] = useState("privacy");
+  const current = policies.find(p => p.id === activePolicy) || policies[0];
+
   return (
     <div className="flex flex-col gap-8 animate-in fade-in duration-200">
       
-      {/* Back to Dashboard Link */}
+      {/* Back Link */}
       <div className="pt-2">
         <Link href="/" className="text-xs font-black uppercase text-neutral-500 hover:text-white transition-colors tracking-widest font-mono">
           &larr; Back to Dashboard
@@ -13,53 +57,48 @@ export default function PoliciesPage() {
       </div>
 
       {/* Hero Header */}
-      <section className="relative py-12 flex flex-col items-start gap-4">
-        <h1 className="text-4xl md:text-6xl font-black tracking-tight text-white uppercase">
-          Operational Policies
-        </h1>
-        <p className="text-xs text-neutral-404 font-mono uppercase tracking-wider text-neutral-400">
-          Privacy parameters, terms of execution, and quantitative risk disclaimers
-        </p>
+      <section className="relative border-b border-white/5 pb-6">
+        <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white uppercase">Operational Policies</h1>
+        <p className="text-xs text-neutral-404 font-mono uppercase tracking-wide text-neutral-400">Data logging boundaries, software terms, and risk disclosures</p>
       </section>
 
-      {/* Policies Content */}
-      <section className="flex flex-col gap-8 font-mono text-xs">
+      {/* Sidebar Layout */}
+      <div className="flex flex-col md:flex-row gap-8">
         
-        {/* Privacy */}
-        <div className="bg-[#0d0d0d] p-8 rounded-2xl border border-white/5 flex flex-col gap-3">
-          <h3 className="text-lg font-bold text-white uppercase tracking-wide border-b border-white/5 pb-3">[01] Data Privacy & Telemetry Logging</h3>
-          <p className="text-xs text-neutral-400 leading-relaxed mt-1">
-            This software runs as a localized pipeline. It attaches to your active Chrome browser via CDP port 9222 and only reads raw flight multipliers and resolve timestamps from the DOM elements. 
-          </p>
-          <p className="text-xs text-neutral-400 leading-relaxed">
-            No account usernames, passwords, cookies, billing logs, card details, or gaming session records are accessed, cached, or dispatched. All scraped telemetry parameters are kept securely in your local Supabase database instance.
-          </p>
-        </div>
+        {/* Left Navigation */}
+        <aside className="md:w-64 flex-shrink-0">
+          <nav className="flex flex-col gap-2">
+            {policies.map((p) => {
+              const isActive = activePolicy === p.id;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setActivePolicy(p.id)}
+                  className={`text-left px-4 py-3 text-xs font-bold font-mono uppercase tracking-wider rounded-xl border transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-orange-500 text-black border-orange-500 shadow-lg shadow-orange-500/10"
+                      : "bg-[#0d0d0d] text-neutral-400 border-white/5 hover:text-white hover:border-white/10"
+                  }`}
+                >
+                  {p.name}
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
 
-        {/* Terms */}
-        <div className="bg-[#0d0d0d] p-8 rounded-2xl border border-white/5 flex flex-col gap-3">
-          <h3 className="text-lg font-bold text-white uppercase tracking-wide border-b border-white/5 pb-3">[02] Terms of Local Execution</h3>
-          <p className="text-xs text-neutral-400 leading-relaxed mt-1">
-            This quantitative analyzer is provided strictly for educational modeling, sequence backtesting, and simulation checks. Users assume all responsibility and risk regarding the execution of these services. 
-          </p>
-          <p className="text-xs text-neutral-400 leading-relaxed">
-            Commercial sale, automatic execution (botting), or claiming these outputs represent standard or guaranteed advising advice is not permitted under this MIT-licensed system.
-          </p>
-        </div>
+        {/* Right Content Area */}
+        <main className="flex-1 bg-[#0d0d0d] rounded-2xl border border-white/5 p-8 font-mono text-xs leading-relaxed flex flex-col gap-4">
+          <h3 className="text-lg font-bold text-white uppercase border-b border-white/5 pb-3">
+            {current.title}
+          </h3>
+          <div className="text-neutral-300 flex flex-col gap-4">
+            {current.content}
+          </div>
+        </main>
 
-        {/* Disclaimers */}
-        <div className="bg-orange-950/20 p-8 rounded-2xl border border-orange-500/20 flex flex-col gap-3">
-          <h3 className="text-lg font-bold text-orange-500 uppercase tracking-wide border-b border-orange-500/20 pb-3">[03] Strategy Risk Warning</h3>
-          <p className="text-xs text-orange-400/80 leading-relaxed mt-1">
-            Recurrent sequence modeling (LSTM) generates forecasts based on historical outcome sequences. Crash games are designed around independent round probability, meaning outputs do not guarantee future success. 
-          </p>
-          <p className="text-xs text-orange-400/80 leading-relaxed">
-            Clustered cold streaks, high variance, and instant 1.00x crashes occur. Users must exercise extreme caution when testing simulation parameters.
-          </p>
-        </div>
-
-      </section>
-
+      </div>
+      
     </div>
   );
 }
