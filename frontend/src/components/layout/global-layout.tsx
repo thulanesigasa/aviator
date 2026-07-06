@@ -31,14 +31,18 @@ export function GlobalLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-6 font-sans selection:bg-orange-500/30 flex flex-col justify-between gap-12">
+    <div className={`min-h-screen p-6 font-sans selection:bg-orange-500/30 flex flex-col justify-between gap-12 transition-colors duration-300 ${
+      theme === "light" 
+        ? "light-theme bg-white text-black" 
+        : "bg-black text-white"
+    }`}>
       <div className="max-w-7xl mx-auto w-full flex flex-col gap-6">
         
         {/* Header System */}
         <header className="flex flex-col md:flex-row items-start md:items-center justify-between py-2 border-b border-white/5 pb-6 gap-4">
           <div className="flex items-center gap-3">
             <div>
-              <h1 className="text-2xl font-black tracking-tight text-white uppercase flex items-center gap-2">
+              <h1 className="text-2xl font-black tracking-tight uppercase flex items-center gap-2">
                 <Link href="/" className="hover:text-neutral-200 transition-colors">
                   Aviator LSTM <span className="text-orange-500">Predictor</span>
                 </Link>
@@ -72,12 +76,14 @@ export function GlobalLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Footer System */}
-      <footer className="w-full max-w-7xl mx-auto border-t border-white/5 pt-10 mt-12 flex flex-col gap-8 bg-black">
+      <footer className={`w-full max-w-7xl mx-auto border-t border-white/5 pt-10 mt-12 flex flex-col gap-8 transition-colors duration-300 ${
+        theme === "light" ? "bg-white" : "bg-black"
+      }`}>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           
           {/* Main Logo & Pipeline Summary */}
           <div className="flex flex-col gap-3">
-            <span className="text-sm font-black uppercase text-white tracking-widest">
+            <span className="text-sm font-black uppercase tracking-widest">
               aviator <span className="text-orange-500">tech</span>
             </span>
             <p className="text-xs text-neutral-405 leading-relaxed max-w-xs text-neutral-400">
@@ -92,7 +98,7 @@ export function GlobalLayout({ children }: { children: React.ReactNode }) {
 
           {/* System Links */}
           <div className="flex flex-col gap-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-white">System</span>
+            <span className="text-xs font-bold uppercase tracking-wider">System</span>
             <div className="flex flex-col gap-2 text-xs text-neutral-400 font-medium">
               <Link href="/features" className="text-left hover:text-orange-500 transition-colors">Features</Link>
               <Link href="/architecture" className="text-left hover:text-orange-500 transition-colors font-mono">Architecture</Link>
@@ -102,7 +108,7 @@ export function GlobalLayout({ children }: { children: React.ReactNode }) {
 
           {/* Resources Links */}
           <div className="flex flex-col gap-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-white">Resources</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Resources</span>
             <div className="flex flex-col gap-2 text-xs text-neutral-400 font-medium">
               <Link href="/faq" className="text-left hover:text-orange-500 transition-colors">FAQ</Link>
               <Link href="/contact" className="text-left hover:text-orange-500 transition-colors">Contact</Link>
@@ -111,7 +117,7 @@ export function GlobalLayout({ children }: { children: React.ReactNode }) {
 
           {/* Policies Links */}
           <div className="flex flex-col gap-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-white">Policies</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Policies</span>
             <div className="flex flex-col gap-2 text-xs text-neutral-400 font-medium">
               <Link href="/policies" className="text-left hover:text-orange-500 transition-colors">Privacy Policy</Link>
               <Link href="/policies" className="text-left hover:text-orange-500 transition-colors font-mono">Terms of Service</Link>

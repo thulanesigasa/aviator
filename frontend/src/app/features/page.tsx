@@ -1,11 +1,17 @@
-"use client";
-
 import React from "react";
+import Link from "next/link";
 
 export default function FeaturesPage() {
   return (
     <div className="flex flex-col gap-8 animate-in fade-in duration-200">
       
+      {/* Back to Dashboard Link */}
+      <div className="pt-2">
+        <Link href="/" className="text-xs font-black uppercase text-neutral-500 hover:text-white transition-colors tracking-widest font-mono">
+          &larr; Back to Dashboard
+        </Link>
+      </div>
+
       {/* Hero Header */}
       <section className="relative py-12 flex flex-col items-start gap-4">
         <h1 className="text-4xl md:text-6xl font-black tracking-tight text-white uppercase">
