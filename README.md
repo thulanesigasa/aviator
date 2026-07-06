@@ -40,9 +40,9 @@ graph TD
 To run the complete pipeline on Windows, launch the following services in separate command prompt windows:
 
 ### Step 1: Open Google Chrome in Remote Debugging Mode
-Close all active instances of Google Chrome first. Then open a command prompt (`cmd.exe`) and execute the following command to launch a browser session listening on port `9222`:
+Close all active instances of Google Chrome first. Then open a command prompt (`cmd.exe`) and execute the following command to launch a browser session listening on port `9222` with background throttling disabled (this ensures Chrome keeps rendering DOM changes even when minimized or occluded by other windows):
 ```cmd
-"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\chrome-automation-profile"
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\chrome-automation-profile" --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding
 ```
 *Navigating to the Hollywoodbets Aviator page in this browser session allows the scraper to attach to the live DOM.*
 
