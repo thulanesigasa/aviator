@@ -30,6 +30,8 @@ class CrashPayload(BaseModel):
 class SystemStateStore:
     def __init__(self):
         self.dashboards: Set[WebSocket] = set()
+        self.last_ingested_multiplier: Optional[float] = None
+        self.last_ingested_timestamp: Optional[str] = None
         self.latest_signal: Dict[str, Any] = {
             "prediction": "WAIT: Downward Trend",
             "probability": 0.45,
@@ -55,9 +57,26 @@ async def ingest_crash(payload: CrashPayload):
     Ingestion endpoint called by the Playwright scraper.
     Writes telemetry parameters to Supabase, updates status checks, and broadcasts to active clients.
     """
+    # Deduplication check
+    if state.last_ingested_multiplier is not None and state.last_ingested_timestamp is not None:
+        try:
+            from datetime import datetime
+            prev_time = datetime.fromisoformat(state.last_ingested_timestamp.replace("Z", "+00:00"))
+            curr_time = datetime.fromisoformat(payload.timestamp.replace("Z", "+00:00"))
+            time_diff = (curr_time - prev_time).total_seconds()
+            if payload.multiplier == state.last_ingested_multiplier and abs(time_diff) < 8.0:
+                return {"status": "ignored", "detail": "duplicate round"}
+        except Exception as e:
+            # Non-blocking log if datetime parsing failed
+            print(f"[API Ingest] Warning checking duplicate: {e}")
+
     try:
         # Save payload to Supabase
         await insert_crash_record(payload.multiplier, payload.timestamp)
+        
+        # Update last ingested tracker
+        state.last_ingested_multiplier = payload.multiplier
+        state.last_ingested_timestamp = payload.timestamp
         
         # Update live scraper status details
         state.scraper_status["healthy"] = True

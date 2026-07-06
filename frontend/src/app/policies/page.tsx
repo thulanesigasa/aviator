@@ -159,7 +159,7 @@ function PoliciesContent() {
         </aside>
 
         {/* Right Content Area */}
-        <main className="flex-1 bg-[#0d0d0d] rounded-2xl border border-white/5 p-8 font-mono text-xs leading-relaxed flex flex-col gap-4">
+        <main className="flex-1 bg-[#0d0d0d] rounded-2xl border border-white/5 p-8 font-mono text-xs leading-relaxed flex flex-col gap-4 h-[450px] overflow-y-auto">
           <h3 className="text-lg font-bold text-white uppercase border-b border-white/5 pb-3">
             {current.title}
           </h3>
